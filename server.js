@@ -67,6 +67,7 @@ const viewEmployees = () => {
             res.status(500).json({ error: err.message });
             return;
           }
+            console.log('----------------------------------------------------------------------------------')
             console.table(rows)
             initialPrompt()
         })
@@ -79,6 +80,7 @@ const viewRolls = () => {
             res.status(500).json({ error: err.message });
             return;
             }
+            console.log('------------------------------------------------')
             console.table(rows)
             initialPrompt()
         })
@@ -90,6 +92,7 @@ const viewDepartments = () => {
             res.status(500).json({ error: err.message });
             return;
           }
+            console.log('--------------')
             console.table(rows)
             initialPrompt()
         })
@@ -110,6 +113,7 @@ const viewDepartments = () => {
                     res.status(500).json({ error: err.message });
                     return;
                 }
+                    console.log('--------------')
                     viewDepartments()
                     initialPrompt()
                   })
@@ -148,13 +152,15 @@ const viewDepartments = () => {
             await departmentId.pop()
             await departmentId.push(roleDepartment.department)
             console.log(departmentId[0])  
-            console.log('-----------------------------------------------')  
+            console.log(" ")
+            console.log('\n -----------------------------------------------')  
             db.query(`INSERT INTO role (title, salary, department_id)
             VALUES ('${roleName.newRoll}', ${roleSalary.salary}, ${departmentId[0]})`, (err, res) => {
                 if (err) {
                     res.status(500).json({ error: err.message });
                     return;
                 }
+                    console.log('-----------------------------------------------')
                     viewRolls()
                     initialPrompt()
                   })
@@ -163,5 +169,39 @@ const viewDepartments = () => {
         }
 
         const updateEmployeeRoll = () => {
-
+            db.query(`SELECT id, first_name, last_name FROM employee`, async function (err, results) {
+                const employees = results.map(({ id, first_name, last_name }) => ({ name: first_name + ' ' + last_name, value: id }));
+                console.log(employees)
+                const selectedEmployee = await inquirer.prompt([
+                    {
+                        type: 'list',
+                        name: 'employee_id', 
+                        message: 'Which employee do you want to update?',
+                        choices: employees
+                      }
+                    
+                ])
+                console.log(selectedEmployee.employee_id)
+                db.query(`SELECT id, title FROM role`, async function (err, results) {
+                    const roles = results.map(({ id, title }) => ({ name: title, value: id }));
+                    console.log(roles)
+                const newRole = await inquirer.prompt([
+                    {
+                        type: 'list',
+                        name: 'role', 
+                        message: 'What role do you want to change them to?',
+                        choices: roles
+                      }
+                ])
+                console.log(selectedEmployee.employee_id)
+                console.log(newRole.role)
+                db.query(`UPDATE employee SET role_id = ${newRole.role} WHERE id = ${selectedEmployee.employee_id}`, function (err, results) {
+                    if (err)throw err;
+                    console.log('-----------------------------------------------')
+                    viewEmployees()
+                    initialPrompt()
+                })
+                })
+            })
+            
         };
